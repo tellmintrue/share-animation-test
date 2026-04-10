@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Share Affordance Animation Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1a1a1a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #fff;
+      padding: 24px 20px;
+      overflow-x: auto;
+      overflow-y: auto;
+      min-width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      max-width: 1800px;
+      min-width: 1600px;
+      margin: 0 auto 24px;
+      overflow: visible;
+    }
+
+    .card {
+      background: #2a2a2a;
+      border-radius: 14px;
+      padding: 12px 4px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      overflow: visible;
+    }
+
+    .card-number {
+      font-size: 11px;
+      color: #666;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .card-vars {
+      width: 100%;
+      font-size: 10px;
+      color: #555;
+      background: #222;
+      border-radius: 6px;
+      padding: 7px 9px;
+      line-height: 1.7;
+      font-family: 'SF Mono', Menlo, monospace;
+    }
+    .card-vars span { color: #87CEEB; }
+
+    /* Phone screen */
+    .phone {
+      width: 280px;
+      height: 606px;
+      position: relative;
+      overflow: visible;
+      border-radius: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .phone img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Button wrapper */
+    .btn-wrapper {
+      position: absolute;
+      left: 233.7px;
+      top: 483.6px;
+      width: 23.9px;
+      height: 23.9px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: visible;
+      perspective: 1000px;
+    }
+
+    .btn {
+      width: 23.9px;
+      height: 23.9px;
+      border-radius: 50%;
+      border: 1px solid #efefef;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+      overflow: visible;
+      transform-style: preserve-3d;
+    }
+
+    .btn-icon {
+      width: 9.53px;
+      height: 10.42px;
+      transform: translateY(-1px);
+      display: block;
+      position: relative;
+      overflow: visible;
+    }
+
+    .btn-icon svg {
+      overflow: visible;
+    }
+
+    .btn-icon path {
+      stroke: #000000;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute;
+      right: -16px;
+      bottom: calc(100% + 2px);
+      width: 137px;
+      height: 40.2px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .tooltip img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tooltip.show {
+      opacity: 1;
+    }
+
+
+    /* ===== TEST A: Icon Spin Morph (공유⇄메시지 양방향) ===== */
+    .testA .btn {
+      transition: none;
+      transform: none;
+      overflow: visible;
+      position: relative;
+    }
+
+    .testA .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background: #06C755;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 0;
+      opacity: 0;
+    }
+
+    .testA .btn-icon {
+      transform: translateY(-1px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .testA .btn-icon path {
+      transition: none;
+      transform: none;
+    }
+
+    .testA .btn-icon-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      width: 16.4px;
+      height: 16.4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .testA.animating .btn {
+      border-color: #06C755;
+      animation: testA-btn-border 4s forwards;
+    }
+
+    .testA.animating .btn::before {
+      animation: testA-bg-cycle 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    .testA.animating .btn-icon {
+      animation: testA-icon-cycle 4s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+    }
+
+    .testA.animating .btn-icon path {
+      animation: testA-icon-color 4s forwards;
+    }
+
+    .testA.animating .btn-icon-message {
+      animation: testA-message-cycle 4s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+    }
+
+    .testA.animating .btn-icon-message path {
+      fill: #FFFFFF;
+    }
+
+    @keyframes testA-btn-border {
+      0%, 100% {
+        border-color: #efefef;
+      }
+      10%, 90% {
+        border-color: transparent;
+      }
+    }
+
+    @keyframes testA-bg-cycle {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      12% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+      }
+      88% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes testA-icon-cycle {
+      0% {
+        transform: translateY(-1px) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      12% {
+        transform: translateY(-1px) rotate(180deg) scale(0.3);
+        opacity: 0;
+      }
+      13%, 87% {
+        transform: translateY(-1px) rotate(180deg) scale(0.3);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(-1px) rotate(360deg) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes testA-icon-color {
+      0%, 100% {
+        stroke: #000000;
+      }
+      10%, 90% {
+        stroke: #FFFFFF;
+      }
+    }
+
+    @keyframes testA-message-cycle {
+      0%, 10% {
+        transform: translate(-50%, -50%) scale(0.5) rotate(-90deg);
+        opacity: 0;
+      }
+      20% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      80% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      90% {
+        transform: translate(-50%, -50%) scale(0.5) rotate(90deg);
+        opacity: 0;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(0.5) rotate(90deg);
+        opacity: 0;
+      }
+    }
+
+
+    /* ===== TEST B: Fast Pop + Arrow ===== */
+    .testB .btn {
+      transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
+      transform: none;
+    }
+    .testB .btn-icon {
+      transform: translateY(-1px);
+      position: relative;
+    }
+    .testB .btn-icon path {
+      transition: stroke 0.3s ease-out;
+      transform: none;
+    }
+
+    .testB.animating .btn {
+      animation: testB-pop 4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .testB.animating .btn-icon {
+      transform: translateY(-1px);
+    }
+
+    .testB.animating .btn-icon path {
+      animation: testB-icon-color 4s;
+      stroke-width: 1.2;
+    }
+
+    .testB.animating .btn-icon path:nth-child(2),
+    .testB.animating .btn-icon path:nth-child(3) {
+      animation: testB-icon-color 4s, testB-arrow-bounce 0.5s 0.5s ease-in-out 8;
+    }
+
+    @keyframes testB-pop {
+      0% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(0.5);
+      }
+      17% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(1.0);
+      }
+      23% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(0.98);
+      }
+      25% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(1);
+      }
+      90% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(1);
+      }
+      100% {
+        background-color: #fff;
+        border-color: #efefef;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes testB-icon-color {
+      0%, 90% { stroke: #FFFFFF; }
+      100% { stroke: #000000; }
+    }
+
+    @keyframes testB-arrow-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1.5px); }
+    }
+
+
+    /* ===== TEST B alt: Elastic Pop ===== */
+    .testB_alt .btn {
+      transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
+      transform: none;
+    }
+    .testB_alt .btn-icon {
+      transform: translateY(-1px);
+    }
+    .testB_alt .btn-icon path {
+      transition: stroke 0.3s ease-out;
+      transform: none;
+    }
+
+    .testB_alt.animating .btn {
+      animation: testB_alt-elastic-pop 4s;
+    }
+
+    .testB_alt.animating .btn-icon path {
+      stroke: #FFFFFF;
+    }
+
+    .testB_alt.animating .btn-icon path:nth-child(2),
+    .testB_alt.animating .btn-icon path:nth-child(3) {
+      animation: testB_alt-arrow-bounce 0.5s 0.6s ease-in-out 6;
+    }
+
+    @keyframes testB_alt-elastic-pop {
+      0% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(0.5);
+      }
+      10% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(1.2);
+      }
+      15% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(0.9);
+      }
+      20% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(1.05);
+      }
+      25%, 100% {
+        background-color: #06C755;
+        border-color: transparent;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes testB_alt-arrow-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1.5px); }
+    }
+
+
+    /* ===== TEST C: Message Fly Away ===== */
+    .testC .btn {
+      transition: none;
+      transform: none;
+      overflow: visible;
+      position: relative;
+    }
+
+    .testC .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background: #06C755;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 0;
+      opacity: 0;
+    }
+
+    .testC .btn-icon {
+      transform: translateY(-1px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .testC .btn-icon path {
+      transition: none;
+      transform: none;
+    }
+
+    .testC .btn-icon-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      width: 16.4px;
+      height: 16.4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .testC.animating .btn {
+      border-color: #06C755;
+      animation: testC-btn-border 5s forwards;
+    }
+
+    .testC.animating .btn::before {
+      animation: testC-bg-cycle 5s ease-in-out forwards;
+    }
+
+    .testC.animating .btn-icon {
+      animation: testC-icon-morph 5s ease-in-out forwards;
+    }
+
+    .testC.animating .btn-icon path {
+      animation: testC-icon-color 5s ease-in-out forwards;
+    }
+
+    .testC.animating .btn-icon-message {
+      animation: testC-message-journey 5s ease-in-out forwards;
+    }
+
+    .testC.animating .btn-icon-message path {
+      fill: #FFFFFF;
+    }
+
+    @keyframes testC-btn-border {
+      0%, 100% {
+        border-color: #efefef;
+      }
+      8%, 92% {
+        border-color: transparent;
+      }
+    }
+
+    @keyframes testC-bg-cycle {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      10% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+      }
+      90% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes testC-icon-morph {
+      0% {
+        transform: translateY(-1px) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      8% {
+        transform: translateY(-1px) rotate(90deg) scale(0.5);
+        opacity: 0;
+      }
+      10%, 90% {
+        transform: translateY(-1px) rotate(90deg) scale(0.5);
+        opacity: 0;
+      }
+      98% {
+        transform: translateY(-1px) rotate(90deg) scale(0.5);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(-1px) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes testC-icon-color {
+      0%, 100% {
+        stroke: #000000;
+      }
+      8%, 92% {
+        stroke: #FFFFFF;
+      }
+    }
+
+    @keyframes testC-message-journey {
+      0%, 8% {
+        transform: translate(-50%, -50%) rotate(-90deg) scale(0.5);
+        opacity: 0;
+      }
+      16% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      24% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      30% {
+        transform: translate(calc(-50% + 8px), -50%) scale(0.3);
+        opacity: 0;
+      }
+      31% {
+        transform: translate(calc(-50% - 8px), -50%) scale(0.3);
+        opacity: 0;
+      }
+      37% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      84% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      92% {
+        transform: translate(-50%, -50%) rotate(90deg) scale(0.5);
+        opacity: 0;
+      }
+      100% {
+        transform: translate(-50%, -50%) rotate(90deg) scale(0.5);
+        opacity: 0;
+      }
+    }
+
+
+    /* ===== TEST D: Button Pendulum ===== */
+    .testD .btn {
+      transform: none;
+      transform-origin: center center;
+      transition: background-color 0.4s ease-out, border-color 0.4s ease-out;
+    }
+    .testD .btn-icon {
+      transform: translateY(-1px);
+    }
+    .testD .btn-icon path {
+      transform: none;
+      transition: stroke 0.4s ease-out;
+    }
+
+    .testD.animating .btn {
+      background-color: #06C755 !important;
+      border-color: transparent !important;
+      transform-origin: center bottom;
+      animation: testD-pendulum 0.3s 0.5s cubic-bezier(0.4, 0, 0.6, 1) 4;
+      transition: none !important;
+    }
+
+    .testD.animating .btn-icon path {
+      stroke: #FFFFFF !important;
+      transition: none !important;
+    }
+
+    .testD.animating .btn-icon {
+      transform: translateY(-1px);
+    }
+
+    @keyframes testD-pendulum {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      20% {
+        transform: rotate(5deg);
+      }
+      50% {
+        transform: rotate(0deg);
+      }
+      70% {
+        transform: rotate(-5deg);
+      }
+    }
+
+
+    /* ===== TEST E: Radial Fill + Line Draw ===== */
+    .testE .btn {
+      transition: none;
+      transform: none;
+      overflow: visible;
+      position: relative;
+    }
+
+    .testE .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: #06C755;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+    }
+
+    .testE .btn-icon {
+      position: relative;
+      z-index: 1;
+      transform: translate(0.1px, -0.5px);
+    }
+    .testE .btn-icon path {
+      transition: none;
+      transform: none;
+    }
+
+    .testE.animating .btn {
+      background-color: #fff;
+      border-color: #efefef;
+      animation: testE-btn-tension 0.6s 0.7s cubic-bezier(0.34, 1.3, 0.64, 1), testE-btn-fade 0.3s 1.3s forwards;
+    }
+
+    .testE.animating .btn::before {
+      animation: testE-radial-fill 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, testE-radial-shrink 0.3s 1.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+    }
+
+    .testE.animating .btn-icon path {
+      stroke: #FFFFFF;
+      stroke-width: 1.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* 첫 번째 path - 아래 가로선 */
+    .testE.animating .btn-icon path:nth-child(1) {
+      stroke-dasharray: 26;
+      stroke-dashoffset: 26;
+      animation: testE-line-draw-1 0.8s 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* 두 번째 path - 화살표 */
+    .testE.animating .btn-icon path:nth-child(2) {
+      stroke-dasharray: 9;
+      stroke-dashoffset: 9;
+      animation: testE-line-draw-2 0.4s 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* 세 번째 path - 세로선 */
+    .testE.animating .btn-icon path:nth-child(3) {
+      stroke-dasharray: 9;
+      stroke-dashoffset: 9;
+      animation: testE-line-draw-3 0.45s 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes testE-radial-fill {
+      0% {
+        width: 0;
+        height: 0;
+        opacity: 0.8;
+      }
+      100% {
+        width: 110%;
+        height: 110%;
+        opacity: 1;
+      }
+    }
+
+    @keyframes testE-radial-shrink {
+      0% {
+        width: 110%;
+        height: 110%;
+        opacity: 1;
+      }
+      100% {
+        width: 0;
+        height: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes testE-line-draw-1 {
+      0% {
+        stroke-dashoffset: 26;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes testE-line-draw-2 {
+      0% {
+        stroke-dashoffset: 9;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes testE-line-draw-3 {
+      0% {
+        stroke-dashoffset: 9;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes testE-btn-tension {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.08);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes testE-btn-fade {
+      0% {
+        background-color: #fff;
+        border-color: #efefef;
+      }
+      100% {
+        background-color: #fff;
+        border-color: #efefef;
+      }
+    }
+
+
+
+    /* ===== Light Green Variations (-2) ===== */
+
+    /* TEST A-2 */
+    .testA_2 .btn {
+      transition: none;
+      transform: none;
+      overflow: visible;
+      position: relative;
+    }
+    .testA_2 .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background: rgba(51, 246, 51, 0.17);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 0;
+      opacity: 0;
+    }
+    .testA_2 .btn-icon {
+      transform: translateY(-1px);
+      position: relative;
+      z-index: 1;
+    }
+    .testA_2 .btn-icon path {
+      transition: none;
+      transform: none;
+    }
+    .testA_2 .btn-icon-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      width: 16.4px;
+      height: 16.4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .testA_2.animating .btn {
+      border-color: #D4FAD4;
+      animation: testA_2-btn-border 4s forwards;
+    }
+    .testA_2.animating .btn::before {
+      animation: testA_2-bg-cycle 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    .testA_2.animating .btn-icon {
+      animation: testA_2-icon-cycle 4s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+    }
+    .testA_2.animating .btn-icon path {
+      animation: testA_2-icon-color 4s forwards;
+    }
+    .testA_2.animating .btn-icon-message {
+      animation: testA_2-message-cycle 4s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+    }
+    .testA_2.animating .btn-icon-message path {
+      fill: #1BBB4D;
+    }
+    @keyframes testA_2-btn-border {
+      0%, 100% { border-color: #efefef; }
+      10%, 90% { border-color: #D4FAD4; }
+    }
+    @keyframes testA_2-bg-cycle {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      12% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+      88% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    }
+    @keyframes testA_2-icon-cycle {
+      0% { transform: translateY(-1px) rotate(0deg) scale(1); opacity: 1; }
+      12% { transform: translateY(-1px) rotate(180deg) scale(0.3); opacity: 0; }
+      13%, 87% { transform: translateY(-1px) rotate(180deg) scale(0.3); opacity: 0; }
+      100% { transform: translateY(-1px) rotate(360deg) scale(1); opacity: 1; }
+    }
+    @keyframes testA_2-icon-color {
+      0%, 100% { stroke: #000000; }
+      10%, 90% { stroke: #1BBB4D; }
+    }
+    @keyframes testA_2-message-cycle {
+      0%, 10% { transform: translate(-50%, -50%) scale(0.5) rotate(-90deg); opacity: 0; }
+      20% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+      80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+      90% { transform: translate(-50%, -50%) scale(0.5) rotate(90deg); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(0.5) rotate(90deg); opacity: 0; }
+    }
+
+    /* TEST B-2 */
+    .testB_2 .btn {
+      transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
+      transform: none;
+    }
+    .testB_2 .btn-icon {
+      transform: translateY(-1px);
+      position: relative;
+    }
+    .testB_2 .btn-icon path {
+      transition: stroke 0.3s ease-out;
+      transform: none;
+    }
+    .testB_2.animating .btn {
+      animation: testB_2-pop 4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .testB_2.animating .btn-icon {
+      transform: translateY(-1px);
+    }
+    .testB_2.animating .btn-icon path {
+      animation: testB_2-icon-color 4s;
+      stroke-width: 1.2;
+    }
+    .testB_2.animating .btn-icon path:nth-child(2),
+    .testB_2.animating .btn-icon path:nth-child(3) {
+      animation: testB_2-icon-color 4s, testB_2-arrow-bounce 0.5s 0.5s ease-in-out 8;
+    }
+    @keyframes testB_2-pop {
+      0% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(0.5); }
+      17% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(1.0); }
+      23% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(0.98); }
+      25% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(1); }
+      90% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(1); }
+      100% { background-color: #fff; border-color: #efefef; transform: scale(1); }
+    }
+    @keyframes testB_2-icon-color {
+      0%, 90% { stroke: #1BBB4D; }
+      100% { stroke: #000000; }
+    }
+    @keyframes testB_2-arrow-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1.5px); }
+    }
+
+    /* TEST B alt-2 */
+    .testB_alt_2 .btn {
+      transition: background-color 0.3s ease-out, border-color 0.3s ease-out;
+      transform: none;
+    }
+    .testB_alt_2 .btn-icon {
+      transform: translateY(-1px);
+    }
+    .testB_alt_2 .btn-icon path {
+      transition: stroke 0.3s ease-out;
+      transform: none;
+    }
+    .testB_alt_2.animating .btn {
+      animation: testB_alt_2-elastic-pop 4s;
+    }
+    .testB_alt_2.animating .btn-icon path {
+      stroke: #1BBB4D;
+    }
+    .testB_alt_2.animating .btn-icon path:nth-child(2),
+    .testB_alt_2.animating .btn-icon path:nth-child(3) {
+      animation: testB_alt_2-arrow-bounce 0.5s 0.6s ease-in-out 6;
+    }
+    @keyframes testB_alt_2-elastic-pop {
+      0% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(0.5); }
+      10% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(1.2); }
+      15% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(0.9); }
+      20% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(1.05); }
+      25%, 100% { background-color: rgba(51, 246, 51, 0.17); border-color: #D4FAD4; transform: scale(1); }
+    }
+    @keyframes testB_alt_2-arrow-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1.5px); }
+    }
+
+    /* TEST C-2 */
+    .testC_2 .btn {
+      transition: none;
+      transform: none;
+      overflow: visible;
+      position: relative;
+    }
+    .testC_2 .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background: rgba(51, 246, 51, 0.17);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 0;
+      opacity: 0;
+    }
+    .testC_2 .btn-icon {
+      transform: translateY(-1px);
+      position: relative;
+      z-index: 1;
+    }
+    .testC_2 .btn-icon path {
+      transition: none;
+      transform: none;
+    }
+    .testC_2 .btn-icon-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      width: 16.4px;
+      height: 16.4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .testC_2.animating .btn {
+      border-color: #D4FAD4;
+      animation: testC_2-btn-border 5s forwards;
+    }
+    .testC_2.animating .btn::before {
+      animation: testC_2-bg-cycle 5s ease-in-out forwards;
+    }
+    .testC_2.animating .btn-icon {
+      animation: testC_2-icon-morph 5s ease-in-out forwards;
+    }
+    .testC_2.animating .btn-icon path {
+      animation: testC_2-icon-color 5s ease-in-out forwards;
+    }
+    .testC_2.animating .btn-icon-message {
+      animation: testC_2-message-journey 5s ease-in-out forwards;
+    }
+    .testC_2.animating .btn-icon-message path {
+      fill: #1BBB4D;
+    }
+    @keyframes testC_2-btn-border {
+      0%, 100% { border-color: #efefef; }
+      8%, 92% { border-color: #D4FAD4; }
+    }
+    @keyframes testC_2-bg-cycle {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      10% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+      90% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    }
+    @keyframes testC_2-icon-morph {
+      0% { transform: translateY(-1px) rotate(0deg) scale(1); opacity: 1; }
+      8% { transform: translateY(-1px) rotate(90deg) scale(0.5); opacity: 0; }
+      10%, 90% { transform: translateY(-1px) rotate(90deg) scale(0.5); opacity: 0; }
+      98% { transform: translateY(-1px) rotate(90deg) scale(0.5); opacity: 0; }
+      100% { transform: translateY(-1px) rotate(0deg) scale(1); opacity: 1; }
+    }
+    @keyframes testC_2-icon-color {
+      0%, 100% { stroke: #000000; }
+      8%, 92% { stroke: #1BBB4D; }
+    }
+    @keyframes testC_2-message-journey {
+      0%, 8% { transform: translate(-50%, -50%) rotate(-90deg) scale(0.5); opacity: 0; }
+      16% { transform: translate(-50%, -50%) rotate(0deg) scale(1); opacity: 1; }
+      24% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      30% { transform: translate(calc(-50% + 8px), -50%) scale(0.3); opacity: 0; }
+      31% { transform: translate(calc(-50% - 8px), -50%) scale(0.3); opacity: 0; }
+      37% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      84% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      92% { transform: translate(-50%, -50%) rotate(90deg) scale(0.5); opacity: 0; }
+      100% { transform: translate(-50%, -50%) rotate(90deg) scale(0.5); opacity: 0; }
+    }
+
+    /* TEST D-2 */
+    .testD_2 .btn {
+      transform: none;
+      transform-origin: center center;
+      transition: background-color 0.4s ease-out, border-color 0.4s ease-out;
+    }
+    .testD_2 .btn-icon {
+      transform: translateY(-1px);
+    }
+    .testD_2 .btn-icon path {
+      transform: none;
+      transition: stroke 0.4s ease-out;
+    }
+    .testD_2.animating .btn {
+      background-color: rgba(51, 246, 51, 0.17) !important;
+      border-color: #D4FAD4 !important;
+      transform-origin: center bottom;
+      animation: testD_2-pendulum 0.3s 0.5s cubic-bezier(0.4, 0, 0.6, 1) 4;
+      transition: none !important;
+    }
+    .testD_2.animating .btn-icon path {
+      stroke: #1BBB4D !important;
+      transition: none !important;
+    }
+    .testD_2.animating .btn-icon {
+      transform: translateY(-1px);
+    }
+    @keyframes testD_2-pendulum {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(5deg); }
+      50% { transform: rotate(0deg); }
+      70% { transform: rotate(-5deg); }
+    }
+
+    /* TEST E-2 */
+    .testE_2 .btn {
+      transition: none;
+      transform: none;
+      overflow: visible;
+      position: relative;
+    }
+    .testE_2 .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(51, 246, 51, 0.17);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+    }
+    .testE_2 .btn-icon {
+      position: relative;
+      z-index: 1;
+      transform: translate(0.1px, -0.5px);
+    }
+    .testE_2 .btn-icon path {
+      transition: none;
+      transform: none;
+    }
+    .testE_2.animating .btn {
+      background-color: #fff;
+      border-color: #efefef;
+      animation: testE_2-btn-tension 0.6s 0.7s cubic-bezier(0.34, 1.3, 0.64, 1), testE_2-btn-fade 0.3s 1.3s forwards;
+    }
+    .testE_2.animating .btn::before {
+      animation: testE_2-radial-fill 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, testE_2-radial-shrink 0.3s 1.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+    }
+    .testE_2.animating .btn-icon path {
+      stroke: #1BBB4D;
+      stroke-width: 1.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    /* 첫 번째 path - 아래 가로선 */
+    .testE_2.animating .btn-icon path:nth-child(1) {
+      stroke-dasharray: 26;
+      stroke-dashoffset: 26;
+      animation: testE_2-line-draw-1 0.8s 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    /* 두 번째 path - 화살표 */
+    .testE_2.animating .btn-icon path:nth-child(2) {
+      stroke-dasharray: 9;
+      stroke-dashoffset: 9;
+      animation: testE_2-line-draw-2 0.4s 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    /* 세 번째 path - 세로선 */
+    .testE_2.animating .btn-icon path:nth-child(3) {
+      stroke-dasharray: 9;
+      stroke-dashoffset: 9;
+      animation: testE_2-line-draw-3 0.45s 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes testE_2-radial-fill {
+      0% { width: 0; height: 0; opacity: 0.8; }
+      100% { width: 110%; height: 110%; opacity: 1; }
+    }
+    @keyframes testE_2-radial-shrink {
+      0% { width: 110%; height: 110%; opacity: 1; }
+      100% { width: 0; height: 0; opacity: 0; }
+    }
+    @keyframes testE_2-line-draw-1 {
+      0% { stroke-dashoffset: 26; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes testE_2-line-draw-2 {
+      0% { stroke-dashoffset: 9; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes testE_2-line-draw-3 {
+      0% { stroke-dashoffset: 9; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes testE_2-btn-tension {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    @keyframes testE_2-btn-fade {
+      0% { background-color: #fff; border-color: #efefef; }
+      100% { background-color: #fff; border-color: #efefef; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Share Affordance Animation Test</h1>
+  <p class="subtitle">화면을 클릭하면 어포던스 재생</p>
+
+  <div class="grid" id="grid-main"></div>
+  <div class="grid" id="grid-variant"></div>
+
+  <script>
+    const ICON_SVG = `<svg class="btn-icon" viewBox="0 0 12.7384 13.9265" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
+      <path d="M0.6 6.27526V12.9144C0.6 13.142 0.7845 13.3265 1.01208 13.3265H11.7263C11.9539 13.3265 12.1384 13.142 12.1384 12.9144V6.27526" stroke="#000000" stroke-width="1.2"/>
+      <path d="M3.32435 3.71108L6.36927 0.826495L9.4141 3.71108" stroke="#000000" stroke-width="1.2"/>
+      <path d="M6.37222 0.826495L6.3663 9.15983" stroke="#000000" stroke-width="1.2"/>
+    </svg>`;
+
+    const MESSAGE_ICON_SVG = `<svg class="btn-icon-message" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M24.2389 14.3828L8.99251 6.76951C8.62113 6.58351 8.17882 6.62288 7.84487 6.87285C7.5119 7.12282 7.34936 7.53321 7.42423 7.94261L8.67925 14.871H9.31858H9.96973H16.6664V15.8551H9.96973H9.31858H8.66841L7.42423 22.7825C7.34936 23.1929 7.5119 23.6023 7.84487 23.8522C8.03992 23.9979 8.27043 24.0727 8.50193 24.0727C8.66841 24.0727 8.83686 24.0343 8.99349 23.9565L24.2389 16.3423C24.6123 16.1553 24.8438 15.7803 24.8438 15.363C24.8438 14.9448 24.6123 14.5698 24.2389 14.3828" fill="#000000"/>
+    </svg>`;
+
+    const tests = [
+      { id: 'testA', num: 'A', title: 'Icon Spin Morph',
+        vars: 'duration: <span>4s</span><br>easing: <span>cubic-bezier</span><br>color: <span>#06C755 / #FFFFFF ⇄ #000</span>', hasMessage: true },
+      { id: 'testB', num: 'B', title: 'Pop',
+        vars: 'duration: <span>4s</span><br>easing: <span>cubic-bezier(0.34, 1.56, 0.64, 1)</span><br>color: <span>#06C755 / #FFFFFF</span> → <span>#FFF / #000</span>', hasMessage: false },
+      { id: 'testB_alt', num: 'B alt', title: 'Pop alt',
+        vars: 'duration: <span>4s</span><br>easing: <span>elastic</span><br>color: <span>#06C755 / #FFFFFF</span>', hasMessage: false },
+      { id: 'testC', num: 'C', title: 'Message Fly Away',
+        vars: 'duration: <span>5s</span><br>easing: <span>ease-in-out</span><br>color: <span>#06C755 / #FFFFFF ⇄ #000</span>', hasMessage: true },
+      { id: 'testD', num: 'D', title: 'Button Pendulum',
+        vars: 'duration: <span>0.3s × 4회</span><br>easing: <span>cubic-bezier(0.4, 0, 0.6, 1)</span><br>color: <span>#06C755 / #FFFFFF</span>', hasMessage: false },
+      { id: 'testE', num: 'E', title: 'Radial Fill + Line Draw',
+        vars: 'duration: <span>0.35s fill + 0.8s draw</span><br>easing: <span>cubic-bezier</span><br>color: <span>#06C755 / #FFFFFF</span>', hasMessage: false },
+    ];
+
+    const testVariants = [
+      { id: 'testA_2', num: 'A-2', title: 'Icon Spin Morph',
+        vars: 'duration: <span>4s</span><br>easing: <span>cubic-bezier</span><br>color: <span>#33F633 17% / #1BBB4D ⇄ #000</span><br>border: <span>#D4FAD4</span>', hasMessage: true },
+      { id: 'testB_2', num: 'B-2', title: 'Pop',
+        vars: 'duration: <span>4s</span><br>easing: <span>cubic-bezier(0.34, 1.56, 0.64, 1)</span><br>color: <span>#33F633 17% / #1BBB4D</span> → <span>#FFF / #000</span><br>border: <span>#D4FAD4</span>', hasMessage: false },
+      { id: 'testB_alt_2', num: 'B alt-2', title: 'Pop alt',
+        vars: 'duration: <span>4s</span><br>easing: <span>elastic</span><br>color: <span>#33F633 17% / #1BBB4D</span><br>border: <span>#D4FAD4</span>', hasMessage: false },
+      { id: 'testC_2', num: 'C-2', title: 'Message Fly Away',
+        vars: 'duration: <span>5s</span><br>easing: <span>ease-in-out</span><br>color: <span>#33F633 17% / #1BBB4D ⇄ #000</span><br>border: <span>#D4FAD4</span>', hasMessage: true },
+      { id: 'testD_2', num: 'D-2', title: 'Button Pendulum',
+        vars: 'duration: <span>0.3s × 4회</span><br>easing: <span>cubic-bezier(0.4, 0, 0.6, 1)</span><br>color: <span>#33F633 17% / #1BBB4D</span><br>border: <span>#D4FAD4</span>', hasMessage: false },
+      { id: 'testE_2', num: 'E-2', title: 'Radial Fill + Line Draw',
+        vars: 'duration: <span>0.35s fill + 0.8s draw</span><br>easing: <span>cubic-bezier</span><br>color: <span>#33F633 17% / #1BBB4D</span>', hasMessage: false },
+    ];
+
+
+    const gridMain = document.getElementById('grid-main');
+    const gridVariant = document.getElementById('grid-variant');
+
+    // 카드 렌더링 함수
+    function renderCard(v, grid) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const iconHTML = v.hasMessage ? `${ICON_SVG}${MESSAGE_ICON_SVG}` : ICON_SVG;
+
+      card.innerHTML = `
+        <span class="card-number">#${v.num}</span>
+        <div class="card-title">${v.title}</div>
+        <div class="phone">
+          <img src="figma-screen.png" alt="Screen" />
+          <div class="btn-wrapper ${v.id}">
+            <div class="tooltip">
+              <img src="tooltip-image.png" alt="Share with your friends" />
+            </div>
+            <div class="btn">${iconHTML}</div>
+          </div>
+        </div>
+        <div class="card-vars">${v.vars}</div>
+      `;
+      grid.appendChild(card);
+
+      const wrapper = card.querySelector('.btn-wrapper');
+      const phone = card.querySelector('.phone');
+      const tooltip = card.querySelector('.tooltip');
+
+      phone.addEventListener('click', () => {
+        wrapper.classList.remove('animating');
+        tooltip.classList.remove('show');
+        void wrapper.offsetWidth;
+        wrapper.classList.add('animating');
+        setTimeout(() => {
+          tooltip.classList.add('show');
+        }, 800);
+      });
+
+      wrapper.addEventListener('animationend', (e) => {
+        const n = e.animationName;
+        // Only remove animating class when the FINAL animation completes
+        if ((n.includes('testA-message-cycle') && v.id === 'testA') ||
+            (n.includes('testB-pop') && v.id === 'testB') ||
+            (n.includes('testB_alt-elastic-pop') && v.id === 'testB_alt') ||
+            (n.includes('testC-message-journey') && v.id === 'testC') ||
+            (n.includes('testD-pendulum') && v.id === 'testD') ||
+            (n.includes('testE-radial-shrink') && v.id === 'testE') ||
+            (n.includes('testA_2-message-cycle') && v.id === 'testA_2') ||
+            (n.includes('testB_2-pop') && v.id === 'testB_2') ||
+            (n.includes('testB_alt_2-elastic-pop') && v.id === 'testB_alt_2') ||
+            (n.includes('testC_2-message-journey') && v.id === 'testC_2') ||
+            (n.includes('testD_2-pendulum') && v.id === 'testD_2') ||
+            (n.includes('testE_2-radial-shrink') && v.id === 'testE_2')) {
+          wrapper.classList.remove('animating');
+        }
+      });
+    }
+
+    // A~E 렌더링
+    tests.forEach(v => renderCard(v, gridMain));
+
+    // A-2~E-2 렌더링
+    testVariants.forEach(v => renderCard(v, gridVariant));
+
+    // 페이지 로드 시 전체 동시 재생
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.querySelectorAll('.btn-wrapper').forEach(w => {
+          w.classList.add('animating');
+        });
+      }, 500);
+    });
+  </script>
+</body>
+</html>
